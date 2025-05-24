@@ -47,6 +47,8 @@ model_basename = utilities.get_basename(__file__)
 sim_path = utilities.create_sim_path (script_path,model_basename)
 print('Simulation data directory: ', sim_path)
 
+# change current path to model script path
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # ======================== simulation settings ================================
 

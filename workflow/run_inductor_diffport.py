@@ -44,6 +44,9 @@ model_basename = utilities.get_basename(__file__)
 sim_path = utilities.create_sim_path (script_path,model_basename)
 print('Simulation data directory: ', sim_path)
 
+# change current path to model script path
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 
 # ======================== simulation settings ================================
 
@@ -90,25 +93,29 @@ max_cellsize = (wavelength_air)/(np.sqrt(materials_list.eps_max)*cells_per_wavel
 
 ########### create model, run and post-process ###########
 
-# Create simulation for port 1 excitation, return value is data path for that excitation
-excite_ports = [1]  # list of ports that are excited for this simulation run
 FDTD = openEMS(EndCriteria=np.exp(energy_limit/10 * np.log(10)))
 FDTD.SetGaussExcite( (fstart+fstop)/2, (fstop-fstart)/2 )
 FDTD.SetBoundaryCond( Boundaries )
-FDTD = simulation_setup.setupSimulation (excite_ports, 
-                                         simulation_ports, 
-                                         FDTD, 
-                                         materials_list, 
-                                         dielectrics_list, 
-                                         metals_list, 
-                                         allpolygons, 
-                                         max_cellsize, 
-                                         refined_cellsize, 
-                                         margin, 
-                                         unit,
-                                         xy_mesh_function=util_meshlines.create_xy_mesh_from_polygons)
 
-sub1_data_path = simulation_setup.runSimulation (excite_ports, FDTD, sim_path, model_basename, preview_only, postprocess_only)
+
+# Create simulation for port 1 excitation, return value is list of data paths, one for each excitation
+data_paths = []
+for excite_ports in [[1]]:  # list of ports that are excited one after another
+    FDTD = simulation_setup.setupSimulation (excite_ports, 
+                                             simulation_ports, 
+                                             FDTD, 
+                                             materials_list, 
+                                             dielectrics_list, 
+                                             metals_list, 
+                                             allpolygons, 
+                                             max_cellsize, 
+                                             refined_cellsize, 
+                                             margin, 
+                                             unit, 
+                                             xy_mesh_function=util_meshlines.create_xy_mesh_from_polygons)
+
+    data_paths.append(simulation_setup.runSimulation (excite_ports, FDTD, sim_path, model_basename, preview_only, postprocess_only))
+
 
 # get results, CSX port definition is read from simulation ports object
 CSX_port1 = simulation_ports.get_port_by_number(1).CSXport

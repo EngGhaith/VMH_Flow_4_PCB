@@ -46,6 +46,8 @@ model_basename = utilities.get_basename(__file__)
 sim_path = utilities.create_sim_path (script_path,model_basename)
 print('Simulation data directory: ', sim_path)
 
+# change current path to model script path
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # ======================== simulation settings ================================
 
@@ -97,13 +99,13 @@ max_cellsize = (wavelength_air)/(np.sqrt(materials_list.eps_max)*cells_per_wavel
 
 ########### create model, run and post-process ###########
 
-# Create simulation for port 1+2 excitation
-# Excited GSG port on left side is composite from CSX ports 1+2, opposite polarity, so we excite 1+2 simultaneously
-excite_ports = [1,2]  # list of ports that are excited for this simulation run
-
 FDTD = openEMS(EndCriteria=np.exp(energy_limit/10 * np.log(10)))
 FDTD.SetGaussExcite( (fstart+fstop)/2, (fstop-fstart)/2 )
 FDTD.SetBoundaryCond( Boundaries )
+
+# Create simulation for port 1+2 excitation
+# Excited GSG port on left side is composite from CSX ports 1+2, opposite polarity, so we excite 1+2 simultaneously
+excite_ports = [1,2]  # list of ports that are excited for this simulation run
 
 # use polygon-based meshing
 FDTD = simulation_setup.setupSimulation (excite_ports, 

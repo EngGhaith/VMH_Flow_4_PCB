@@ -46,6 +46,8 @@ model_basename = utilities.get_basename(__file__)
 sim_path = utilities.create_sim_path (script_path,model_basename)
 print('Simulation data directory: ', sim_path)
 
+# change current path to model script path
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # ======================== simulation settings ================================
 
@@ -96,12 +98,13 @@ max_cellsize = (wavelength_air)/(np.sqrt(materials_list.eps_max)*cells_per_wavel
 
 ########### create model, run and post-process ###########
 
+FDTD = openEMS(EndCriteria=np.exp(energy_limit/10 * np.log(10)))
+FDTD.SetGaussExcite( (fstart+fstop)/2, (fstop-fstart)/2 )
+FDTD.SetBoundaryCond( Boundaries )
+
 # Create simulation for port 1 and 2 excitation, return value is list of data paths, one for each excitation
 data_paths = []
 for excite_ports in [[1],[2]]:  # list of ports that are excited one after another
-    FDTD = openEMS(EndCriteria=np.exp(energy_limit/10 * np.log(10)))
-    FDTD.SetGaussExcite( (fstart+fstop)/2, (fstop-fstart)/2 )
-    FDTD.SetBoundaryCond( Boundaries )
     FDTD = simulation_setup.setupSimulation (excite_ports, 
                                              simulation_ports, 
                                              FDTD, 
