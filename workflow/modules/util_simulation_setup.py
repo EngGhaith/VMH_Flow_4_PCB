@@ -253,7 +253,7 @@ def addMesh_to_CSX (CSX, allpolygons, dielectrics_list, metals_list, refined_cel
     mesh.SetDeltaUnit(unit)
 
     # meshing of dielectrics and metals
-    no_z_mesh_list = ['SiO2','LBE'] # exclude SiO2 from meshing because we only mesh metal layers in that region, exclude LBE because we mesh substrate
+    no_z_mesh_list = [] # exclude from meshing, specify stackup layer name here
     mesh = z_mesh_function (mesh, dielectrics_list, metals_list, refined_cellsize, max_cellsize, air_around, no_z_mesh_list)
     mesh = xy_mesh_function (mesh, allpolygons, margin, air_around, refined_cellsize, max_cellsize)
 
@@ -282,7 +282,8 @@ def setupSimulation (excite_portnumbers,simulation_ports, FDTD, materials_list, 
       for poly in allpolygons.polygons:
         layernum = poly.layernum
         metal = metals_list.getbylayernumber(layernum)
-        if metal != None:
+
+        if metal is not None:
             metal.is_used = True
             # set polygon via property, used later for meshing
             poly.is_via = metal.is_via
