@@ -102,6 +102,12 @@ def create_z_mesh(mesh, dielectrics_list, metals_list, target_cellsize, max_cell
                 # thin layer
                 add_equal_meshlines(mesh, 'z', zmin, zmax, target_cellsize_z)
             else:
+                # check if we have extra marginsg for antenna simulation, then we push out the top and bottom boundary
+                if stackup_layer.dielectric.is_top:
+                    zmax = max(stackup_layer.dielectric.zmax, stackup_layer.dielectric.zmin + antenna_margin)
+                elif stackup_layer.dielectric.is_bottom:
+                    zmin = zmin - antenna_margin
+
                 # place mesh line at interface    
                 mesh.AddLine('z', zmin)
                 mesh.AddLine('z', zmax)
@@ -109,6 +115,7 @@ def create_z_mesh(mesh, dielectrics_list, metals_list, target_cellsize, max_cell
                     mesh.AddLine('z', zmin+stackup_layer.meshsize_bottom)
                 if stackup_layer.meshsize_top > 0:
                     mesh.AddLine('z', zmin+stackup_layer.meshsize_top)
+
 
 
     # check for possible gaps
