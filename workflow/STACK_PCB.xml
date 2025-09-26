@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+  <Stackup schemaVersion="2.0">
+    <Materials>
+      <Material Name="BCu" Type="Conductor" Permittivity="1" DielectricLossTangent="0" Conductivity="59600000.0" Color="39bfff"/>
+      <Material Name="FCu" Type="Conductor" Permittivity="1" DielectricLossTangent="0" Conductivity="59600000.0" Color="d80000"/>
+      <Material Name="Via" Type="Conductor" Permittivity="1" DielectricLossTangent="0" Conductivity="59600000.0" Color="ff8000"/>
+      <Material Name="AIR" Type="Dielectric" Permittivity="1.0" DielectricLossTangent="0.0" Conductivity="0" Color="d0d0d0"/>
+      <Material Name="SUB" Type="Dielectric" Permittivity="3.48" DielectricLossTangent="0.0031" Conductivity="0" Color="93e837"/>
+    </Materials>
+    <ELayers LengthUnit="um">
+      <Dielectrics>
+        <Dielectric Name="AIR" Material="AIR" Thickness="4000.0000" />
+        <Dielectric Name="SUB" Material="SUB" Thickness="138" />
+	<!-- Comment: Material name SUB is excluded from meshing, so we must use a different name to add some spacing at the bottom of the simulation box --> 
+        <Dielectric Name="Spacing" Material="SUB" Thickness="4000" />
+      </Dielectrics>
+      <Layers>
+        <Substrate Offset="4000"/>
+		<Layer Name="FCu" Type="conductor" Zmin="138" Zmax="173" Material="FCu" Layer="402" />
+		<Layer Name="Via" Type="via" Zmin="18" Zmax="138" Material="Via" Layer="403" />
+        <Layer Name="Bcu" Type="conductor" Zmin="0" Zmax="18" Material="BCu" Layer="404" />
+      </Layers>
+    </ELayers>
+  </Stackup>
+
