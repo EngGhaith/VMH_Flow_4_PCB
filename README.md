@@ -109,6 +109,15 @@ This is a template to simulate a PCB using this flow to provide automatic mehsin
 1. (Optional) Define your field dumps in "run_PCB_Line.py".
 1. Run simulation!
 ### Results
-Results are attached to the simulation. Dumps were deleted to avoid exploding the storage. If you simulate the same example, you will get these results:
+Results are attached to the simulation. Dumps were deleted to avoid exploding the storage. Gerber files could also be found in doc/PCB_Line directory.  
+If you simulate the same example, you will get these results:
+#### Return Loss:
+![plot](./doc/PCB_Line/Return_Loss.png)
+#### Insertion Loss:
+![plot](./doc/PCB_Line/Insertion_Loss.png)
+#### Steady-state field pattern at 20 GHz:
+![plot](./doc/PCB_Line/E&J.webp)
+#### E-Field wave propagation:
+![E-Field wave propagation](./doc/PCB_Line/Et.mp4)
 
 
