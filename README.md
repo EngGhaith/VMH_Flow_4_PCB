@@ -96,3 +96,19 @@ The resulting S-parameters can be used for simulation, but you can also extract 
 For all models listed above, polygons for layout and port shape are read from GDSII files. This model is different, it shows how rectangles and polygons can be added by code lines. This can be used in addition to GDSII layout, or instead of GDSII layout.
 
 ![plot](./doc/png/run_line_noGDSII.png)
+
+## run_PCB_Line
+This is a template to simulate a PCB using this flow to provide automatic mehsing.  
+### How to?
+1. Export your PCB as Gerber-Files (Gerber X2 are preffered).
+1. Open KLayout and import your Gerber-Files.
+1. A window to choose Gerber-Files and map them to GDS-Layers would pop up. Map them as you will.
+1. Klayout creates polygon from the Gerber-Files. Modify them and merge polygons to delete unnecessary nodes.
+1. Define your ports and save the GDS.
+1. Adjust the "STACK_PCB.xml" file according to your PCB-stack.
+1. (Optional) Define your field dumps in "run_PCB_Line.py".
+1. Run simulation!
+### Results
+Results are attached to the simulation. Dumps were deleted to avoid exploding the storage. If you simulate the same example, you will get these results:
+
+
