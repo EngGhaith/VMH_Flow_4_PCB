@@ -118,6 +118,7 @@ If you simulate the same example, you will get these results:
 #### Steady-state field pattern at 20 GHz:
 ![plot](./doc/PCB_Line/E&J.webp)
 #### E-Field wave propagation:
-![E-Field wave propagation](./doc/PCB_Line/Et.mp4)
+<video src="https://github.com/EngGhaith/VMH_Flow_4_PCB/blob/e6f9b8da7233d1f9904e7118e35e2f0de2a427f1/doc/PCB_Line/Et.mp4" controls width="600">
+</video>
 
 
