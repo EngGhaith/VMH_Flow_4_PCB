@@ -13,6 +13,8 @@ The second major change is that examples and documentation now use the settings[
 
 A graphical XML stackup editor was added in the `stackup_editor`directory. When the gds2openEMS Python module is installed, you can call this from the commandline using 'stackupEditor`, with an XML file as optional parameter. Because of this GUI-based stackup editor, the PySide6 module is now a required dependency, and installed automatically when you install the gds2openEMS mdoule.
 
+A stackup material's `DielectricLossTangent` now actually reaches the EM solver: given `settings['fstart']`/`settings['fstop']`, it's automatically fit to a causal, frequency-dependent Debye dispersive model instead of being silently ignored. See [Dielectric loss tangent (Debye dispersive materials)](./doc/userguide_md_format/Using_OpenEMS_Python_with_IHP_SG13G2_v3.md#dielectric-loss-tangent-debye-dispersive-materials) in the User's Guide, and [`more_examples/textbook_microstrip_attenuation/`](./more_examples/textbook_microstrip_attenuation/) for an example validated against the closed-form textbook microstrip attenuation formula.
+
 See [CHANGES.md](./doc/CHANGES.md) for recent additions and fixes.
 
 # Documentation
