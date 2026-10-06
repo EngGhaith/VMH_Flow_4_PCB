@@ -32,6 +32,7 @@ Document version: 2026-09-02 (v3)
 &ensp;[Forcing the solver thread count](#forcing-the-solver-thread-count)
 &ensp;[Automatic meshing with easyMesh4openEMS](#automatic-meshing-with-easymesh4openems)
 &ensp;[Overriding XML stackup `<Variable>` from the model code](#overriding-xml-stackup-variable-from-the-model-code)
+&ensp;[Dielectric loss tangent (Debye dispersive materials)](#dielectric-loss-tangent-debye-dispersive-materials)
 [Examples](#examples)
 [FAQ](#faq)
 [Appendix](#appendix)
@@ -276,7 +277,7 @@ Settings keys are case-insensitive: `settings['numthreads']` works like `setting
 |---|---|
 | `settings['unit']` | Unit of geometry values, typically `1e-6` (microns) |
 | `settings['margin']` | Oversize of dielectrics from the GDSII bounding box, in the geometry unit |
-| `settings['fstart']` / `settings['fstop']` | Start/stop frequency in Hz for the S-parameter output (FFT post-processing — see [About this workflow](#about-this-workflow)|
+| `settings['fstart']` / `settings['fstop']` | Start/stop frequency in Hz for the S-parameter output (FFT post-processing — see [About this workflow](#about-this-workflow)). Also used to fit a dispersive Debye model for any stackup material with a nonzero `DielectricLossTangent` — see [Dielectric loss tangent (Debye dispersive materials)](#dielectric-loss-tangent-debye-dispersive-materials) |
 | `settings['numfreq']` | Number of frequency points in the output sweep |
 | `settings['refined_cellsize']` | Target mesh size at conductor edges |
 | `settings['Boundaries']` | Required, no built-in default. List of 6 boundary conditions, one per side (`xmin, xmax, ymin, ymax, zmin, zmax`): `'PEC'` (lossless metal box), `'PMC'` (magnetic wall, useful for symmetry), `'MUR'` (simple absorbing), or `'PML_8'` (higher-quality absorbing, much slower simulation) |
@@ -417,6 +418,25 @@ materials_list, dielectrics_list, metals_list = stackup_reader.read_substrate(
 
 Two versions of the same model are provided — `run_rfcmim_2port_parameters.py` (loose variables) and `run_rfcmim_2port_parameters_settings.py` (`settings{}` dict) — producing an identical model, to show both syntax options side by side. See the XML stackup's `<Variables>` block and `"="`-prefixed expressions in [`XML_stackup_format.md`](../XML_stackup_format.md) for the full format.
 
+### Dielectric loss tangent (Debye dispersive materials)
+
+A stackup material's `DielectricLossTangent` (see [`XML_stackup_format.md`](../XML_stackup_format.md#materials)) used to be read from the XML and then quietly ignored: `setupSimulation()` only ever passed `Permittivity` and `Conductivity` to the EM solver, so two stackups differing only in loss tangent produced identical S-parameters. That silent gap is now closed.
+
+Whenever a material has `DielectricLossTangent > 0` **and** `settings['fstart']`/`settings['fstop']` (or positional `fstart`/`fstop`) are available, `setupSimulation()` automatically builds that material as a dispersive openEMS/CSXCAD `CSPropDebyeMaterial` instead of a plain one. No XML or model-script change is needed beyond already setting `fstart`/`fstop`, which every example already does (they're required settings, see above) — existing stackup files with a nonzero `DielectricLossTangent` start getting real, frequency-dependent dielectric loss the next time they're simulated.
+
+**Why a model is needed at all**, rather than just using the number as-is: FDTD (like any time-domain method) needs a causal, frequency-dependent material response, not a single frequency-independent number, to represent loss correctly across a band. The library fits a **wideband, multi-pole Debye model** (the same family of model known from Djordjevic & Sarkar's work on causal PCB-laminate dispersion) that reproduces the declared `Permittivity`/`DielectricLossTangent` as closely as physically possible across `[fstart, fstop]`:
+
+- A **single-pole** Debye model (one relaxation time) only matches the nominal εr/tanδ at the one frequency it's centered on, and drifts away from them elsewhere in the band — fine for a narrow sweep, increasingly wrong for a wide one.
+- A **Lorentz/Drude** model (also available in CSXCAD, `CSPropLorentzMaterial`) represents a *resonant* response. That's the right physics for things like plasmas or optical-band resonances, but not for ordinary dielectric loss, which is orientation-polarization relaxation — i.e. Debye, not Lorentz.
+- A multi-pole **Debye** fit, with poles spread across (and a bit beyond) `[fstart, fstop]`, is both the physically correct mechanism for dielectric relaxation loss and able to track a roughly-constant loss tangent over a wide band, unlike a single pole.
+
+**A note on the physics, not just the fit:** any causal dielectric response obeys the Kramers-Kronig relations, which link how much the loss tangent can be kept flat over frequency to how much the real permittivity must change with frequency. Concretely: the more decades of bandwidth `[fstart, fstop]` spans, and the larger `DielectricLossTangent` is, the more the fitted real permittivity will roll off toward the high-frequency end instead of staying exactly at the nominal `Permittivity` value. That roll-off is real physics (every real lossy dielectric does this to some extent), not a defect in the fit — see the worked example below for how big this effect actually is.
+
+Without `fstart`/`fstop` available, behavior is unchanged from before this feature existed: `DielectricLossTangent` has no effect, and `setupSimulation()` prints one `NOTE:` per affected material saying so.
+
+**Worked example, validated against a closed-form textbook prediction:**
+[`more_examples/textbook_microstrip_attenuation/`](../../more_examples/textbook_microstrip_attenuation/) - a single straight 50-ohm microstrip line on a textbook FR4 substrate (εr=4.3, tanδ=0.02), with the trace width synthesized from the standard closed-form Hammerstad equations. Run with and without the new dispersive model, the *difference* in simulated S21 matches the closed-form dielectric-attenuation formula (same textbook chapter) to within 1.2-7.6% across a 1-4 GHz sweep, the gap growing with frequency exactly as expected from the causality tradeoff above.
+
 ## Examples
 
 All examples read GDSII + XML stackup and write a Touchstone S-parameter file (except where noted). For a longer description of each, see the top-level [README.md](../../README.md#examples).
@@ -442,6 +462,8 @@ All examples read GDSII + XML stackup and write a Touchstone S-parameter file (e
 - `easyMesh/openEMS_generic_nport_MA.py` — easyMesh4openEMS automatic meshing
 - `resistors_sg13g2/run_resistors_Rsil.py` — IHP resistor derived-layer support
 - `combine_layout_sources/run_combine_example.py` — combining GDSII-sourced and manually-coded geometry (rectangles/polygons added directly in Python) in one model
+- `measured_vs_simulated/` — model accuracy studies against measured data
+- `textbook_microstrip_attenuation/` — the new dispersive dielectric loss tangent model, validated against a closed-form textbook attenuation formula, see [Dielectric loss tangent (Debye dispersive materials)](#dielectric-loss-tangent-debye-dispersive-materials)
 
 ## FAQ
 
